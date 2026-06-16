@@ -1,0 +1,129 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isPatient() {
+      return isAuthenticated() && getUserRole() == 'patient';
+    }
+
+    function isHospital() {
+      return isAuthenticated() && getUserRole() == 'hospital';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Hospitals
+    match /hospitals/{hospitalId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.auth.uid == hospitalId;
+      allow update: if isOwner(hospitalId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Departments
+    match /departments/{deptId} {
+      allow read: if true;
+      allow create: if isHospital() && request.resource.data.hospitalId == request.auth.uid;
+      allow update, delete: if isHospital() && resource.data.hospitalId == request.auth.uid;
+    }
+
+    // Services
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create: if isHospital() && request.resource.data.hospitalId == request.auth.uid;
+      allow update, delete: if isHospital() && resource.data.hospitalId == request.auth.uid;
+    }
+
+    // Appointments
+    match /appointments/{appointmentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.hospitalId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isPatient() && request.resource.data.patientId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.hospitalId == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Slots
+    match /slots/{slotId} {
+      allow read: if true;
+      allow create, update, delete: if isHospital() && (
+        request.resource.data.hospitalId == request.auth.uid ||
+        resource.data.hospitalId == request.auth.uid
+      );
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isPatient() && request.resource.data.patientId == request.auth.uid;
+      allow update, delete: if isOwner(resource.data.patientId) || isAdmin();
+    }
+
+    // Messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isAuthenticated();
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read, update: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // Waitlists
+    match /waitlists/{waitlistId} {
+      allow read: if isAuthenticated() && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.hospitalId == request.auth.uid
+      );
+      allow create: if isPatient() && request.resource.data.patientId == request.auth.uid;
+      allow update, delete: if isHospital() || isOwner(resource.data.patientId);
+    }
+
+    // Documents
+    match /documents/{documentId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Analytics
+    match /analytics/{docId} {
+      allow read: if isHospital() || isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+  }
+}

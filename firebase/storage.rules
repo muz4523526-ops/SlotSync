@@ -1,0 +1,55 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User profile photos
+    match /users/{userId}/profile/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Medical documents
+    match /users/{userId}/documents/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+        && request.resource.size < 10 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('application/pdf'));
+    }
+
+    // Hospital images
+    match /hospitals/{hospitalId}/images/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(hospitalId)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Verification documents
+    match /hospitals/{hospitalId}/verification/{fileName} {
+      allow read: if isOwner(hospitalId);
+      allow write: if isOwner(hospitalId)
+        && request.resource.size < 10 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('application/pdf'));
+    }
+
+    // Chat attachments
+    match /chats/{conversationId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "slotsync-functions",
+  "description": "SlotSync Cloud Functions",
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0"
+  }
+}
