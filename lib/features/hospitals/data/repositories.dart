@@ -197,20 +197,18 @@ class AppointmentRepository {
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    Query<Map<String, dynamic>> q = _firestore
+    final q = _firestore
         .collection(AppConstants.slotsCollection)
-        .where('hospitalId', isEqualTo: hospitalId)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('date', isLessThan: Timestamp.fromDate(endOfDay));
-
-    if (departmentId != null) {
-      q = q.where('departmentId', isEqualTo: departmentId);
-    }
+        .where('hospitalId', isEqualTo: hospitalId);
 
     final snapshot = await q.get();
     return snapshot.docs
         .map(SlotModel.fromFirestore)
-        .where((s) => s.isAvailable)
+        .where((s) =>
+            s.date.isAfter(startOfDay.subtract(const Duration(seconds: 1))) &&
+            s.date.isBefore(endOfDay) &&
+            s.isAvailable &&
+            (departmentId == null || s.departmentId == departmentId))
         .toList();
   }
 
