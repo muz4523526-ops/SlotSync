@@ -30,23 +30,36 @@ class _AdminSlotsScreenState extends ConsumerState<AdminSlotsScreen> {
     final user = ref.read(authRepositoryProvider).currentUser;
     if (user == null) return;
 
-    await ref
-        .read(appointmentRepositoryProvider)
-        .createSlot(
-          SlotModel(
-            id: '',
-            hospitalId: user.uid,
-            date: _selectedDate,
-            startTime: _startTimeController.text,
-            endTime: _endTimeController.text,
-            capacity: _capacity,
+    try {
+      await ref
+          .read(appointmentRepositoryProvider)
+          .createSlot(
+            SlotModel(
+              id: '',
+              hospitalId: user.uid,
+              date: _selectedDate,
+              startTime: _startTimeController.text,
+              endTime: _endTimeController.text,
+              capacity: _capacity,
+            ),
+          );
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Slot created')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating slot: $e'),
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkDanger
+                : AppColors.danger,
           ),
         );
-
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Slot created')));
+      }
     }
   }
 

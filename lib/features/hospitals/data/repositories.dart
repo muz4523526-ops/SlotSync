@@ -298,9 +298,11 @@ class AppointmentRepository {
     return _firestore
         .collection(AppConstants.slotsCollection)
         .where('hospitalId', isEqualTo: hospitalId)
-        .orderBy('date')
         .snapshots()
-        .map((s) => s.docs.map(SlotModel.fromFirestore).toList());
+        .map((s) => s.docs
+            .map(SlotModel.fromFirestore)
+            .toList()
+          ..sort((a, b) => a.date.compareTo(b.date)));
   }
 }
 
