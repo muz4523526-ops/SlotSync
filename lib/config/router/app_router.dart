@@ -15,6 +15,7 @@ import '../../features/appointments/presentation/booking_screen.dart';
 import '../../features/chat/presentation/messages_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/support/presentation/help_screen.dart';
 import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/admin/presentation/admin_appointments_screen.dart';
 import '../../features/admin/presentation/admin_services_screen.dart';
@@ -110,6 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           title: state.uri.queryParameters['title'] ?? 'Chat',
         ),
       ),
+      GoRoute(path: '/help', builder: (_, _) => const HelpScreen()),
       ShellRoute(
         builder: (_, _, child) => AdminShell(child: child),
         routes: [

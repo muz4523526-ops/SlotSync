@@ -197,15 +197,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               leading: const Icon(Icons.help_outline),
                               title: const Text('Help & Support'),
                               trailing: const Icon(Icons.chevron_right),
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Help and support is not wired yet.',
-                                    ),
-                                  ),
-                                );
-                              },
+                              onTap: () => context.push('/help'),
                               contentPadding: EdgeInsets.zero,
                             ),
                           ],

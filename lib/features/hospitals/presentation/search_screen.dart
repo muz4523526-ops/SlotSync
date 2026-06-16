@@ -55,21 +55,28 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Future<void> _getCurrentLocation() async {
-    final permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      final granted = await Geolocator.requestPermission();
-      if (granted == LocationPermission.denied) {
-        setState(() => _mapLoading = false);
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        final granted = await Geolocator.requestPermission();
+        if (granted == LocationPermission.denied) {
+          if (mounted) setState(() => _mapLoading = false);
+          return;
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) setState(() => _mapLoading = false);
         return;
       }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      setState(() => _mapLoading = false);
-      return;
-    }
-    final pos = await Geolocator.getCurrentPosition();
-    if (mounted) {
-      setState(() => _currentPosition = LatLng(pos.latitude, pos.longitude));
+      final pos = await Geolocator.getCurrentPosition();
+      if (mounted) {
+        setState(() {
+          _currentPosition = LatLng(pos.latitude, pos.longitude);
+          _mapLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _mapLoading = false);
     }
   }
 
