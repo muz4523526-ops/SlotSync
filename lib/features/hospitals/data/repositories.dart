@@ -201,8 +201,7 @@ class AppointmentRepository {
         .collection(AppConstants.slotsCollection)
         .where('hospitalId', isEqualTo: hospitalId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('date', isLessThan: Timestamp.fromDate(endOfDay))
-        .where('isBlocked', isEqualTo: false);
+        .where('date', isLessThan: Timestamp.fromDate(endOfDay));
 
     if (departmentId != null) {
       q = q.where('departmentId', isEqualTo: departmentId);

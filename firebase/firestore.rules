@@ -12,11 +12,13 @@ service cloud.firestore {
     }
 
     function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc != null && userDoc.data != null && 'role' in userDoc.data
+        ? userDoc.data.role : null;
     }
 
     function isPatient() {
-      return isAuthenticated() && getUserRole() == 'patient';
+      return isAuthenticated() && (getUserRole() == 'patient' || getUserRole() == null);
     }
 
     function isHospital() {

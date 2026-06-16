@@ -54,7 +54,17 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             date: _selectedDate,
             departmentId: widget.departmentId,
           );
-      setState(() => _slots = slots);
+      if (mounted) setState(() => _slots = slots);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not load slots: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _slots = []);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
